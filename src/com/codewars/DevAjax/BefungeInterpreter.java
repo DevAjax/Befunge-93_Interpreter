@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 public class BefungeInterpreter {
-    char[][] instructonsArray = new char[80][25];
+    char[][] instructonsArray = new char[25][80];
     char direction = '>';
     int pointerX = 0;
     int pointerY = 0;
@@ -64,6 +64,10 @@ public class BefungeInterpreter {
                 step();
                 break;
             case '/':
+                if (stack.get(stack.size() - 1) == 0) {
+                    stack.add(0);
+                    break;
+                }
                 tmpdouble = (double) stack.get(stack.size() - 2) / (double) stack.get(stack.size() - 1);
                 stack.remove(stack.size() - 1);
                 stack.remove(stack.size() - 1);
@@ -84,13 +88,14 @@ public class BefungeInterpreter {
                 break;
             case '!':
                 if (stack.get(stack.size() - 1) == 0) {
-                    stack.add(0);
-                    step();
-                } else {
+                    stack.remove(stack.size() - 1);
                     stack.add(1);
                     step();
+                } else {
+                    stack.remove(stack.size() - 1);
+                    stack.add(0);
+                    step();
                 }
-                stack.remove(stack.size() - 2);
                 break;
             case '`':
                 if (stack.get(stack.size() - 2) > stack.get(stack.size() - 1)) {
@@ -124,32 +129,27 @@ public class BefungeInterpreter {
                 step();
                 break;
             case '_':
-                if (stack.get(stack.size() - 1) == 0  ||stack.size()==0) {
-                    this.direction='>';
+                if (stack.get(stack.size() - 1) == 0 || stack.size() == 0) {
+                    this.direction = '>';
                     step();
                 } else {
-                    this.direction='<';
+                    this.direction = '<';
                     step();
                 }
                 stack.remove(stack.size() - 1);
                 break;
             case '|':
-                if (stack.get(stack.size() - 1) == 0 ||stack.size()==0) {
-                    this.direction='v';
+                if (stack.get(stack.size() - 1) == 0 || stack.size() == 0) {
+                    this.direction = 'v';
                     step();
                 } else {
-                    this.direction='^';
+                    this.direction = '^';
                     step();
                 }
                 stack.remove(stack.size() - 1);
                 break;
-            case '"':
-                this.step();
-                while (instructonsArray[pointerY][pointerX] != '"') {
-                    stack.add((int) instructonsArray[pointerY][pointerX]);
-                    step();
-                }
-                step();
+            case '\"':
+                stringMode();
                 break;
             case ':':
                 if (stack.size() == 0) {
@@ -163,13 +163,14 @@ public class BefungeInterpreter {
                 }
             case '\\':
                 if (stack.size() == 1) {
-                    stack.add(stack.size() - 1);
+                    stack.add(stack.get(0));
                     stack.set(0, 0);
                 }
                 tmp = stack.get(stack.size() - 1);
-                stack.set(stack.get(stack.size() - 1), stack.get(stack.size() - 2));
-                stack.set(stack.get(stack.size() - 2), tmp);
+                stack.set(stack.size() - 1, stack.get(stack.size() - 2));
+                stack.set(stack.size() - 2, tmp);
                 step();
+
                 break;
 
             case '$':
@@ -181,12 +182,12 @@ public class BefungeInterpreter {
                     output.append(stack.get(stack.size() - 1));
                     stack.remove(stack.size() - 1);
                 } catch (ArrayIndexOutOfBoundsException e) {
-                }finally {
+                } finally {
                     step();
                 }
                 break;
             case ',':
-                output.append(Character.forDigit((stack.get(stack.size() - 1)), 10));
+                output.append(Character.toString((char) stack.get(stack.size() - 1).intValue()));
                 stack.remove(stack.size() - 1);
                 step();
                 break;
@@ -218,6 +219,15 @@ public class BefungeInterpreter {
         }
     }
 
+    public void stringMode() {
+        step();
+        while (instructonsArray[pointerY][pointerX] != '\"') {
+            stack.add((int) instructonsArray[pointerY][pointerX]);
+            step();
+        }
+        step();
+    }
+
     public void step() {
         switch (direction) {
             case '<':
@@ -237,14 +247,14 @@ public class BefungeInterpreter {
 
     public void moveLeft() {
         if (this.pointerX == 0) {
-            pointerX = 24;
+            pointerX = 79;
             return;
         }
         this.pointerX--;
     }
 
     public void moveRight() {
-        if (this.pointerX == 24) {
+        if (this.pointerX == 79) {
             pointerX = 0;
             return;
         }
@@ -253,14 +263,14 @@ public class BefungeInterpreter {
 
     public void moveUp() {
         if (this.pointerY == 0) {
-            pointerY = 79;
+            pointerY = 24;
             return;
         }
         this.pointerY--;
     }
 
     public void moveDown() {
-        if (this.pointerY == 79) {
+        if (this.pointerY == 24) {
             pointerY = 0;
             return;
         }
